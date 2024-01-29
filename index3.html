@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team 3</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        #team3Table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        #team3Table th, #team3Table td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+
+        #team3Table .shot-attempt {
+            font-weight: bold;
+        }
+
+        #team3TotalRow {
+            font-weight: bold;
+        }
+
+        /* Add additional styles as needed */
+    </style>
+</head>
+<body>
+
+    <h2>Team 3</h2>
+    <table id="team3Table">
+        <thead>
+            <tr>
+                <th>Player Name</th>
+                <th>3+</th>
+                <th>3-</th>
+                <th>2+</th>
+                <th>2-</th>
+                <th>FT+</th>
+                <th>FT-</th>
+                <th>Shot Attempt</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><input type="text" placeholder="Enter Player Name"></td>
+                <td contenteditable="true">0</td>
+                <td contenteditable="true">0</td>
+                <td contenteditable="true">0</td>
+                <td contenteditable="true">0</td>
+                <td contenteditable="true">0</td>
+                <td contenteditable="true">0</td>
+                <td class="shot-attempt"></td>
+            </tr>
+            <tr>
+                <td><input type="text" placeholder="Enter Player Name"></td>
+                <td contenteditable="true">0</td>
+                <td contenteditable="true">0</td>
+                <td contenteditable="true">0</td>
+                <td contenteditable="true">0</td>
+                <td contenteditable="true">0</td>
+                <td contenteditable="true">0</td>
+                <td class="shot-attempt"></td>
+            </tr>
+            <tr>
+                <td><input type="text" placeholder="Enter Player Name"></td>
+                <td contenteditable="true">0</td>
+                <td contenteditable="true">0</td>
+                <td contenteditable="true">0</td>
+                <td contenteditable="true">0</td>
+                <td contenteditable="true">0</td>
+                <td contenteditable="true">0</td>
+                <td class="shot-attempt"></td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr id="team3TotalRow">
+                <th>Total</th>
+                <th class="team3-total-3p"></th>
+                <th class="team3-total-3m"></th>
+                <th class="team3-total-2p"></th>
+                <th class="team3-total-2m"></th>
+                <th class="team3-total-ft-p"></th>
+                <th class="team3-total-ft-m"></th>
+                <th class="team3-total-shot-attempt">0</th>
+            </tr>
+        </tfoot>
+    </table>
+
+    <button id="team3SubmitButton">Submit</button>
+
+    <script>
+        const team3Table = document.getElementById("team3Table");
+        const team3TotalRow = document.getElementById("team3TotalRow");
+        const team3SubmitButton = document.getElementById("team3SubmitButton");
+
+        function calculateTeam3Sum(row) {
+          const numericCells = row.querySelectorAll("td:not(.shot-attempt)");
+          let sum = 0;
+          for (const cell of numericCells) {
+            const value = parseInt(cell.textContent);
+            if (!isNaN(value)) {
+              sum += value;
+            }
+          }
+          return sum;
+        }
+
+        function updateTeam3TotalRow() {
+          const shotAttemptCells = team3Table.querySelectorAll(".shot-attempt");
+          let totalShotAttempt = 0;
+          shotAttemptCells.forEach((cell) => {
+            const value = parseInt(cell.textContent);
+            if (!isNaN(value)) {
+              totalShotAttempt += value;
+            }
+          });
+
+          team3TotalRow.querySelector(".team3-total-shot-attempt").textContent = totalShotAttempt;
+        }
+
+        team3Table.addEventListener("input", (event) => {
+          const row = event.target.closest("tr");
+          const shotAttemptCell = row.querySelector(".shot-attempt");
+          const sum = calculateTeam3Sum(row);
+          shotAttemptCell.textContent = sum;
+
+          updateTeam3TotalRow();
+        });
+
+        function storeTeam3DataOnServer() {
+          const team3TableData = [];
+          const rows = team3Table.querySelectorAll("tbody tr");
+          rows.forEach((row) => {
+            const playerName = row.querySelector("td:first-child input").value;
+            const stats = [];
+            const cells = row.querySelectorAll("td:not(:first-child)"); // Exclude the first column (Player Name)
+            cells.forEach((cell) => {
+              stats.push(cell.textContent);
+            });
+            team3TableData.push({ playerName, stats });
+          });
+
+          // Send data to the server
+          fetch('http://localhost:3000/team3/saveData', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(team3TableData),
+          })
+            .then((response) => response.text())
+            .then((message) => console.log(message))
+            .catch((error) => console.error(error));
+        }
+
+        // Call this function when you want to store the data on the server
+        team3SubmitButton.addEventListener("click", () => {
+            storeTeam3DataOnServer();
+        });
+    </script>
+</body>
+</html>

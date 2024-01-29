@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team 1 and Team 2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        .team-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .team-table th, .team-table td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .team-table .shot-attempt {
+            font-weight: bold;
+        }
+
+        .team-total-row {
+            font-weight: bold;
+        }
+
+        /* Add additional styles as needed */
+    </style>
+</head>
+<body>
+
+    <h2>Team 1</h2>
+    <table id="team1Table" class="team-table">
+        <tbody>
+            
+        </tbody>
+        <!-- Content will be populated using JavaScript -->
+        <tfoot>
+            <tr id="team1TotalRow" class="team-total-row">
+                <!-- Columns for total stats -->
+            </tr>
+        </tfoot>
+    </table>
+
+    <h2>Team 2</h2>
+    <table id="team2Table" class="team-table">
+        <tbody>
+            
+        </tbody>
+        <!-- Content will be populated using JavaScript -->
+        <tfoot>
+            <tr id="team2TotalRow" class="team-total-row">
+                <!-- Columns for total stats -->
+            </tr>
+        </tfoot>
+    </table>
+
+    <script>
+        function fetchAndPopulateTable(teamNumber) {
+            const tableName = `team${teamNumber}Table`;
+            const totalRowName = `team${teamNumber}TotalRow`;
+
+            fetch(`http://localhost:3001/team${teamNumber}/getData`)
+                .then(response => response.json())
+                .then(data => {
+                    const table = document.getElementById(tableName);
+                    const totalRow = document.getElementById(totalRowName);
+                    const tbody = table.querySelector('tbody');
+
+                    // Clear existing rows
+                    tbody.innerHTML = "";
+
+                    if (data.length > 0) {
+                        // Populate table with data from server
+                        data.forEach(player => {
+                            const row = tbody.insertRow();
+                            const playerNameCell = row.insertCell(0);
+                            playerNameCell.innerHTML = player.playerName;
+
+                            for (let i = 0; i < player.stats.length; i++) {
+                                const statCell = row.insertCell(i + 1);
+                                statCell.innerHTML = player.stats[i];
+                            }
+
+                            const shotAttemptCell = row.insertCell(player.stats.length + 1);
+                            shotAttemptCell.className = 'shot-attempt';
+                            shotAttemptCell.innerHTML = calculateShotAttempt(player.stats);
+                        });
+
+                        // Populate total row
+                        const totalStats = calculateTotalStats(data);
+                        for (let i = 0; i < totalStats.length; i++) {
+                            totalRow.cells[i + 1].innerHTML = totalStats[i];
+                        }
+
+                        // Update total shot attempt
+                        const totalShotAttemptCell = totalRow.querySelector('.shot-attempt');
+                        totalShotAttemptCell.innerHTML = calculateShotAttempt(totalStats);
+                    } else {
+                        // Handle case when there is no data
+                        totalRow.innerHTML = '<td colspan="8">No data available</td>';
+                    }
+                })
+                .catch(error => console.error(`Error fetching data for Team ${teamNumber}:`, error));
+        }
+
+        function calculateShotAttempt(stats) {
+            return stats.reduce((acc, val) => acc + parseInt(val), 0);
+        }
+
+        function calculateTotalStats(data) {
+            const totalStats = Array(data[0].stats.length).fill(0);
+            data.forEach(player => {
+                player.stats.forEach((stat, index) => {
+                    totalStats[index] += parseInt(stat);
+                });
+            });
+            return totalStats;
+        }
+
+        // Fetch and populate tables on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchAndPopulateTable(1);
+            fetchAndPopulateTable(2);
+        });
+    </script>
+
+</body>
+</html>
